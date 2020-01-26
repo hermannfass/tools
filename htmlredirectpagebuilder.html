@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<title>HTML Redirect Page Builder</title>
+</head>
+<body>
+
+<h2>HTML Redirect Page Builder</h2>
+
+<script type="text/javascript">
+
+// To limit the link text on the page:
+const urlMaxLength = 40;
+const urlRegexp = new RegExp(".{1," + urlMaxLength.toString() + "}/");
+
+function link_text(url) {
+   var linkText = "Go to " +
+                  url.match(urlRegexp)[0] +
+                  ( (url.length > urlMaxLength) ? '...' : '' );
+   return(linkText);
+}
+
+function a_title(url) {
+   return("Follow recommended redirection to " + url + "!");
+}
+
+function meta_refresh_tag(url) {
+   return('<meta http-equiv="refresh" content="0\; ' + url + '" />');
+}
+
+function page_title() {
+   return("Redirection");
+}
+
+function build_redirect_html(url) {
+   // Shortening link text
+   var url = document.getElementById("urlfield").value;
+   markup =
+     "<html>\n<head>\n" +
+     meta_refresh_tag(url) +
+     "<title>" + page_title() + "</title>\n" +
+     "</head>\n<body>\n<p>\n" +
+     '<a href="' + url + '"\n   title="' + a_title(url) + '"\n  >' +
+     link_text(url) +
+     '</a>\n</p>\n</body>\n</html>\n';
+   return(markup)
+}
+
+function show_redirect_html() {
+   var url = document.getElementById("urlfield").value;
+   markupfield = document.getElementById("markupfield");
+   markupfield.value = build_redirect_html(url);
+   markupfield.select();
+   return(false);
+}
+
+</script>
+
+<form>
+<p>
+Target URL (use a valid and complete format):<br>
+<input value="http://www.vonabiszet.de/asdfasdfadsfa"
+    id="urlfield"
+    name="url" size="78" type="text"
+    style="font-family:monospace;"
+/><br />
+<input value="Build HTML Redirect" onclick="show_redirect_html()" type="button">
+</p>
+<p>
+<textarea id="markupfield" cols="78" rows="16"></textarea>
+</p>
+
+</form>
+
+</body>
+</html>
+
+       
