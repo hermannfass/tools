@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>UTF-8 Text Inspector</title>
+</head>
+<body>
+<h2>Text Inspector</h2>
+<p>
+Breaking down strings into Unicode Points and their UTF-8 Encodings</p>
+
+<script language="javascript">
+
+const enc = new TextEncoder('utf-8');
+
+function analyze(s) {
+	// Code written by Hermann Faß (hermannfass.de)
+	var r = new Array();
+	var chars = Array.from(s); // Array of characters (glyphs)
+	for (var i=0; i<chars.length; i++) {
+		var charData = new Array();
+		charData.push(chars[i]);                          // Character
+		charData.push(formatCP(chars[i].codePointAt(0))); // Code point
+		charData.push(formatCharBytes(chars[i]));         // Bytes
+		r.push(charData);
+	}
+	return(formatOutput(r));
+}
+
+function formatCP(p) {
+	return(p.toString(16));
+}
+
+function formatCharBytes(c) {
+	bytes = Array.from(enc.encode(c));
+	hexBytes = bytes.map( function(b) {
+			return(b.toString(16));
+		}
+	);
+	return(hexBytes.join(" "));
+}
+
+function formatOutput(rows) {
+	var r = "<table>\n" +
+           "<tr><th>Char</th>" +
+	        "<th>Code Point<br>(hexadecimal)</th>" +
+	        "<th>UTF-8 encoding<br>(hexadecimal)</th></tr>\n";
+	for (var i=0; i<rows.length; i++) {
+		r += "<tr>";
+		for (var j=0; j<rows[i].length; j++) {
+			r += "<td>" + rows[i][j] + "</td>\n";
+		}
+		r += "</tr>\n";
+	}
+	r += "</table>\n";
+	return(r);
+}
+		
+
+</script>
+
+<form>
+<p>Text: <br>
+<textarea id="txt" name="text"
+          rows="4" cols="50"
+          autofocus>
+</textarea>
+<br>
+<button onClick="document.getElementById('textinspector').innerHTML=analyze(document.getElementById('txt').value);return(false);"
+      >Code Points &amp; Encodings</button>
+</form>
+<div id="textinspector">
+
+</div>
+
+</body>
+</html>
