@@ -19,13 +19,13 @@ use PDF::API2;
 #        => PDF files under $all_pdf_path/WestCoast/
 #        => Output as $results_dir_path/WestCoast-abc.pdf
 
+# CONFIGURATION
 my $home = $ENV{'HOME'}; 
-
-# Adapt default paths to your environment:
-my $default_all_pdf_parent_path = "$home/OneDrive/PadMu-Content";
+# If needed, adapt the following to meet your file structure.
+# Parent path of all project (band/orchestra/concert) sub directories:
+my $default_all_pdf_parent_path = "$home/sheetmusic";
+# Directory in which the result, i.e. the combined PDF should go:
 my $default_results_dir_path = $default_all_pdf_parent_path;
-
-# Adapt naming conventions or leave as is:
 # Regex for the part of the playlist filename that will be ignored:
 my $playlist_suffix_regex = qr/(-(play)?list)?\..*\z/;
 # Regex indicating that the playlist argument is not a file, but that
@@ -60,6 +60,7 @@ unless ($project_name && $playlist_name) {
 	say "Call $0 without arguments for usage instructions.";
 	exit;
 }
+
 # We have a project name and a playlist name (extracted from playlist path).
 
 if ($narg == 1) {
@@ -74,7 +75,7 @@ if ($narg == 1) {
 		my $cwd = getcwd();
 		$results_dir_path = $cwd;
 		say "Output directory not specified. Using: $cwd" 
-	} elsif ($narg = 3) {
+	} elsif ($narg == 3) {
 		$results_dir_path = $ARGV[2];
 	} else {
 		say usage();
@@ -140,25 +141,28 @@ sub save_combined_pdf {
 	$out_pdf->save($out_path);
 }
 
+# Seach for a PDF file for a particular song title.
 sub find_pdf {
 	my $song = shift;
 	my $fns = shift;
 	say "Checking for: $song";
 	foreach my $fn (@$fns) {
-		if (&fuzzy_match($song, $fn)) {
+		if (&fuzzy_match($fn, $song)) {
 			say "Found $fn";
 			return $fn;
 		}
 	}
 }
 
-# To do: Replace match via title variations with something
-# that transforms both title and filename before comparing.
+# Check if this file looks like the sheet for this song; that is
+# if the information in the filename contains the song name. To make
+# this case insensitive and remove spaces, punctuation etc.,
+# we compare only the "essence" of file and song name.
 sub fuzzy_match {
-	my $title = shift;
 	my $fn = shift;
-	my $t = essence($title);
+	my $title = shift;
 	my $f = essence($fn);
+	my $t = essence($title);
 	$f =~ /$t/;
 }
 
@@ -186,66 +190,86 @@ PDF Merger (for sheet music)
 
 Merge song PDF files into one large PDF document, sorted by a playlist
 or by alphabet. The individual PDF files need to be kept in one
-directory named after the project/band/orchestra.
+directory named after the project (i.e. reflect the name of the
+band, orchester and/or concert event).
 
-Two modes of calling:
+File Locations can be specified in 3 ways:
+A. Adapt your environment to the defaults described below.
+B. Specify different directories as command line parameters.
+C. Adapt the Perl code according to your needs.
 
-1. Using presets (configurable in the Perl code):
+A. Working with defaults
 
-	Best practice and highly recommended:
-	Never use spaces or special characters in directory or file names!
-	Use only the following characters: \[a-z\] \[A-Z] [0-9] - _
-	
-	' .
-	"$0" .' <playlist-file>
+ - In your user home directory, create a (symlink to a) directory
+   called "sheetmusic". 
+ - In this directory "sheetmusic" create a subdirectory named after
+   the project. Usually that is the name of a band or orchestra.
+   In this subdirectory, place a sheet music PDF file for each song.
+ - Create as many playlist files as you want for a project.
 
-	playlist-file ::= [PlaylistPath] <ProjectName> - <PlaylistName> - <Suffix>
+ - Call the following to merge all PDF files according to the playlist:
+   ' .
+   "$0" .' <playlist-file>
 
-	The playlist-file is just a text file that lists the songs which
-	should get merged into the new PDF, listed in the order they should
-	come up there.
+   playlist-file ::= [PlaylistPath]<ProjectName>-<PlaylistLabel>-<Suffix>
 
-	PlaylistPath
-		The directory where the playlist file is located.
-		If it is in the current working directory just leave it out.
+   The playlist-file is just a text file that lists the songs which
+   should get merged into the new PDF, listed in the order they should
+   come up there. Note that the song name needs to be reflected in the
+   PDF file name!
 
-	ProjectName
-		The name of the project (band/orchestra/...), but also (in sync)
-		the name of the subfolder under: \$all_pdf_parent_path
-		That means: The PDFs for this project need to be in
-		\$all_pdf_parent_path/ProjectName
-	
-	PlaylistName
-		The name of the specific playlist that lists the songs in the
-		order the PDF should be merged into the output PDF.
-		PlaylistName can identify the name of a 
+   PlaylistPath
+      The directory where the playlist file is located.
+      If it is in the current working directory just leave it out.
 
-	Suffix
-		The filename suffix of the playlist file. You can end your
-		playlist filenames with anything that matches the regex
-		defined under this variable: \$playlist_suffix_regex
-		It is recommended to end the filename with just 
-		Simply put: End it with ".txt" or "-playlist.txt".
-		For the Perl literate, here is the regex: /(-(play)?list)?\..*\z/
+   ProjectName
+      The name of the project (band/orchestra/...). This must be the
+      same as the name of the subfolder under "sheetmusic".
 
-	The result of this run, i.e. the merged PDF can be found
-		in directory   \$results_dir_path
-		with filename  <ProjectName> <PlaylistName> .pdf
+   PlaylistLabel
+      The name of this specific playlist, so you can have multiple
+      playlists for one project, e.g. one per concert (in which case
+      you label it after the name of the event) or sets of different
+      lengths.
+      "abc" feature: You can just use "abc" to generate a PDF
+      with all songs sorted alphabetically. You do not need an
+      actual playlist for that.
 
-2. File location via command line arguments
+   Suffix
+      The filename suffix of the playlist file. Use either just
+      ".txt" or, just to tell you it is a playlist, "-playlist.txt".
+      For the Perl literate: It needs to match this regex:
+      /(-(play)?list)?\..*\z/
+      For the alphabetic order ("abc" feature decribed above) you
+      do not need a suffix at all. 
 
-	' .
-	"$0" . ' <playlist=file> <PDF-Source-Dir> <PDF-Target-Dir>
+   The result of this run will be a PDF file with all songs, located
+   in the "sheetmusic" folder with the filename
+   <ProjectName> <PlaylistLabel> .pdf
 
-	<playlist-file> see above under 1.
 
-	<PDF-Source-Dir>
-		The full path of the directory in which all the PDF files
-		for this project are located.
+B. File location via command line arguments
 
-	<PDF-Target-Dir>
-		Destination where the result (one PDF file with all song
-		PDF files merged into) goes.';
+   ' .
+   "$0" . '<playlist-file><PDF-Source-Dir><PDF-Target-Dir>
+
+   <playlist-file> see above.
+
+   <PDF-Source-Dir>
+      The full path of the directory in which all the PDF files
+      for this project are located.
+
+   <PDF-Target-Dir>
+      The full path to the directory in which the merged PDF file with
+      all the songs in this playlist should go.
+
+
+C. Adapting this script to your needs
+
+   Adapt the section "CONFIGURATION" in the source code at your
+   convenience.
+   
+';
 }
 
 
