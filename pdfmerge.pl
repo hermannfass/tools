@@ -1,4 +1,4 @@
-#!/Users/herm/bin/perl
+#!/usr/bin/env perl
 
 use 5.20.1;
 use utf8;
