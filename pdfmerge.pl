@@ -1,6 +1,6 @@
 #!/Users/herm/bin/perl
 
-use 5.40.1;
+use 5.20.1;
 use utf8;
 use File::Spec;
 use File::Basename;
@@ -188,10 +188,11 @@ sub usage() {
 	return '
 PDF Merger (for sheet music)
 
-Merge song PDF files into one large PDF document, sorted by a playlist
-or by alphabet. The individual PDF files need to be kept in one
-directory named after the project (i.e. reflect the name of the
-band, orchester and/or concert event).
+Merge song PDF files into one large PDF document, sorted by a
+playlist or by alphabet. The individual PDF files need to be
+kept in one directory named after the project (i.e. reflect the
+name of the band, orchester and/or concert event). You may have
+one or more such projects. 
 
 File Locations can be specified in 3 ways:
 A. Adapt your environment to the defaults described below.
@@ -200,58 +201,78 @@ C. Adapt the Perl code according to your needs.
 
 A. Working with defaults
 
- - In your user home directory, create a (symlink to a) directory
-   called "sheetmusic". 
- - In this directory "sheetmusic" create a subdirectory named after
-   the project. Usually that is the name of a band or orchestra.
-   In this subdirectory, place a sheet music PDF file for each song.
- - Create as many playlist files as you want for a project.
+ - In your user home directory (~/), create a directory called
+   "sheetmusic". If you want to keep all of your sheetmusic PDF
+   files in a different directory, you may want to create a symlink
+   named "sheetmusic" to that directory in your home directory.
 
- - Call the following to merge all PDF files according to the playlist:
-   ' .
-   "$0" .' <playlist-file>
+ - In this directory named (or aliased) "~/sheetmusic/" you should
+   have one subdirectory per project - no matter whether you are
+   involved in only one project or more.
+   In this project specific subdirectory you keep one PDF file per
+   piece that contain the notes (or text/chords/whatever) for that
+   title.
 
-   playlist-file ::= [PlaylistPath]<ProjectName>-<PlaylistLabel>-<Suffix>
+ - Create playlist files as needed.
+   A playlist-file is just a text file that lists the songs which
+   should get included into the new PDF. It should follow a
+   filename convention:
 
-   The playlist-file is just a text file that lists the songs which
-   should get merged into the new PDF, listed in the order they should
-   come up there. Note that the song name needs to be reflected in the
-   PDF file name!
+   <ProjectName>-<PlaylistLabel>-<Suffix>
 
-   PlaylistPath
-      The directory where the playlist file is located.
-      If it is in the current working directory just leave it out.
+   In which:
 
-   ProjectName
-      The name of the project (band/orchestra/...). This must be the
-      same as the name of the subfolder under "sheetmusic".
-
-   PlaylistLabel
+   <ProjectName>
+      is the name of the project (band/orchestra/...).
+      This must be the same as the name of the subfolder under
+      "sheetmusic".
+   <PlaylistLabel>
       The name of this specific playlist, so you can have multiple
       playlists for one project, e.g. one per concert (in which case
       you label it after the name of the event) or sets of different
       lengths.
-      "abc" feature: You can just use "abc" to generate a PDF
-      with all songs sorted alphabetically. You do not need an
-      actual playlist for that.
-
-   Suffix
+   <Suffix>
       The filename suffix of the playlist file. Use either just
       ".txt" or, just to tell you it is a playlist, "-playlist.txt".
       For the Perl literate: It needs to match this regex:
       /(-(play)?list)?\..*\z/
       For the alphabetic order ("abc" feature decribed above) you
       do not need a suffix at all. 
+   Just make sure that the list contains one song title per line
+   in the order you want to see them in the merged PDF. 
+   The name of each song needs to be part of the name of the PDF
+   file for that individual song. Do not worry about upper/lower
+   case and spaces. They are just ignored. That means if your
+   playlist has an entry "Let it be" and you have in your project
+   folder there is a file called e.g. "LetItBe-arrangement2025.pdf"
+   the system will find it and include it in the resulting PDF.
+
+ - Call the following to merge all PDF files according to the playlist:
+
+   ' .
+   "$0" .' [<PathToPlaylistFiles>]<PlaylistFilename>
+
+   <PlaylistPath>
+      The directory where the playlist file is located.
+      If it is in the current working directory just leave it out.
+
+   <PlaylistFilename>
+      This is the name of the playlist following the naming convention
+      described above.
+      For a full list in alphabetical order per project, you do not
+      need to create playlist files, but you can just use the
+      "abc" feature: As file name just call the program like this:
+      ' .
+      "$0" . ' <ProjectName>-abc
 
    The result of this run will be a PDF file with all songs, located
    in the "sheetmusic" folder with the filename
    <ProjectName> <PlaylistLabel> .pdf
 
-
 B. File location via command line arguments
 
    ' .
-   "$0" . '<playlist-file><PDF-Source-Dir><PDF-Target-Dir>
+   "$0" . '<playlist-file> <PDF-Source-Dir> <PDF-Target-Dir>
 
    <playlist-file> see above.
 
